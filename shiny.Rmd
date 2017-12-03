@@ -1,0 +1,161 @@
+---
+title: "U.S. Tweet data"
+output: 
+  flexdashboard::flex_dashboard:
+    navbar:
+      - { title: "About", href: "https://example.com/about", align: left }
+runtime: shiny
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(janitor)
+library(haven)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(ggridges)
+library(ggthemes)
+library(stringr)
+library(plotly)
+library(hexbin)
+library(forcats)
+library(tidytext)
+library(shiny)
+```
+
+
+```{r load tweet data, cache = TRUE}
+# The sentiment function takes a really long time so I created a new data file so you don't have to run it
+us_tweets <- read_csv("us_tweets.csv") 
+
+#gets rid of non alphabetic characters  
+us_tweets$tweet_content_stripped <- gsub("[^[:alpha:] ]", "",
+                                         us_tweets$tweet_content) 
+
+
+#removes all words that are 1-2 letters long
+us_tweets$tweet_content_stripped <- gsub(" *\\b[[:alpha:]]{1,2}\\b *", " ",
+                                         us_tweets$tweet_content_stripped) 
+```
+
+```{r create sentiment totals}
+sentimentTotals <- data.frame(colSums(us_tweets[,c(20:27)]))
+
+names(sentimentTotals) <- "count"
+
+sentimentTotals <- cbind("sentiment" = rownames(sentimentTotals),
+                         sentimentTotals)
+```
+
+
+```{r Converts to long format}
+us_tweets_long <- gather(us_tweets, sentiment, count, anger:trust, 
+                         factor_key = TRUE)
+```
+
+```{r number of tweets per hour}
+us_tweets$hour <- as.POSIXct(us_tweets$hour, format = " %H:%M")
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+This `flexdashboard` with Shiny was made for Homework 6 of [Jeff Goldsmith's Data Science I class](http://jeffgoldsmith.com/DSI/homework_6.html) in the Department of Biostatistics at Columbia University. It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and [Rebecca Venetianer](https://github.com/rvenetianer).
+
+
+```{r widgets}
+sentiments = us_tweets_long %>% distinct(sentiment) %>% pull()
+
+checkboxGroupInput("sentiment_choice", label = h3("Select Sentiment"),
+            choices = sentiments, selected = "anger")
+
+us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive, 
+                         factor_key = TRUE)
+
+pos_neg = us_tweets_neg_pos %>% distinct(neg_pos) %>% pull()
+
+radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices = pos_neg, selected = NULL,
+  inline = FALSE, width = NULL, choiceNames = NULL, choiceValues = NULL)
+
+
+hr()
+
+renderUI({
+
+# set hour of the day
+min_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  min()
+
+max_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  max()
+
+# sliderInput widget
+sliderInput("hour_choice", label = h3("Choose hour"), min = min_hour,
+        max = max_hour, value = c(0, 100), step = 1)
+
+})
+
+hr()
+
+```
+
+Row {.tabset .tabset-fade } 
+-----------------------------------------------------------------------
+
+### Followers
+
+```{r map tweets all US in plotly, eval = F}
+
+#followers
+us_tweets %>% 
+  filter(country == "US") %>% 
+  mutate(text_label = str_c("followers: ", followers, '\nlocation: ', place_as_appears_on_bio)) %>%
+  plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
+          alpha = 0.5, 
+          color = ~followers, text = ~text_label)
+```
+
+### Tweet Positivity or Negitivity
+
+```{r, eval = T}
+renderPlotly({
+#positive score
+us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>%
+  filter(country == "US") %>% 
+  mutate(text_label = str_c("sentiment: ", neg_pos, '\nlocation: ', place_as_appears_on_bio)) %>% 
+  plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
+          alpha = 0.5, 
+          color = ~neg_pos, colors = "Set2", text = ~text_label)
+})
+```
+
+
+### Tweet Sentiments
+
+```{r, eval = T}
+#name of sentiment
+renderPlotly({
+#name of sentiment, ggplot
+us_tweets_long %>%  filter(sentiment == input$sentiment_choice) %>% 
+  filter(country == "US") %>% 
+  filter(count > 0) %>% 
+  mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
+  plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
+          alpha = 0.5, 
+          color = ~sentiment, text = ~text_label)
+})
+```
+
+
+### Tweets per hour
+
+```{r map tweets per hour, eval = F}
+renderPlotly({
+#map interactive tweets per hour in dashboard
+
+us_tweets_long %>%
+  filter(country == "US") %>% filter(hour == input$hour_choice)%>% 
+  plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
+          alpha = 0.5, 
+          color = ~sentiment, text = ~hour)
+})
+```
