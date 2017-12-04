@@ -19,3 +19,15 @@ plotly
 hexbin
 tidytext
 bindrcpp
+sp
+maptools
+gpclib
+stringi
+XML
+acs
+choroplethr
+choroplethrMaps
+syuzhet
+scales
+RColorBrewer
+lubridate
