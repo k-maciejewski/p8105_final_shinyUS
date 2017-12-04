@@ -3,7 +3,8 @@ title: "U.S. Tweet data"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
-      - { title: "About", href: "https://example.com/about", align: left }
+      - { title: "Project Website", href: "https://github.com/k-maciejewski/p8105_final_website", align: left }
+    source_code: "https://github.com/k-maciejewski/p8105_final_shinyUS"
 runtime: shiny
 ---
 
@@ -13,17 +14,15 @@ library(tidyverse)
 library(janitor)
 library(haven)
 library(dplyr)
-library(tidyr)
 library(knitr)
 library(ggridges)
 library(ggthemes)
 library(stringr)
 library(plotly)
-library(hexbin)
-library(forcats)
 library(tidytext)
 library(shiny)
 ```
+
 
 
 ```{r load tweet data, cache = TRUE}
@@ -61,7 +60,11 @@ us_tweets$hour <- as.POSIXct(us_tweets$hour, format = " %H:%M")
 
 Column {.sidebar}
 -----------------------------------------------------------------------
-This `flexdashboard` with Shiny was made for Homework 6 of [Jeff Goldsmith's Data Science I class](http://jeffgoldsmith.com/DSI/homework_6.html) in the Department of Biostatistics at Columbia University. It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and [Rebecca Venetianer](https://github.com/rvenetianer).
+This `flexdashboard` with Shiny was made for the final project of [Jeff Goldsmith's Data Science I class](http://jeffgoldsmith.com/DSI/final_project.html) in the Department of Biostatistics at Columbia University. 
+
+This page investigates tweet sentiments over the enire U.S. during April 14-15, 2016. The data analyzed is from [here]().
+
+It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and ...
 
 
 ```{r widgets}
@@ -84,14 +87,14 @@ hr()
 renderUI({
 
 # set hour of the day
-min_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  min()
+min_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  as.POSIXct(min())
 
-max_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  max()
+max_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  as.POSIXct(max())
 
 # sliderInput widget
-sliderInput("hour_choice", label = h3("Choose hour"), min = min_hour,
-        max = max_hour, value = c(0, 100), step = 1)
-
+sliderInput("hour_choice", label = h3("Choose hour"), min=as.POSIXlt("00:00"),
+            max=as.POSIXlt("23:59"),
+            value=as.POSIXlt("00:00"))
 })
 
 hr()
@@ -100,19 +103,6 @@ hr()
 
 Row {.tabset .tabset-fade } 
 -----------------------------------------------------------------------
-
-### Followers
-
-```{r map tweets all US in plotly, eval = F}
-
-#followers
-us_tweets %>% 
-  filter(country == "US") %>% 
-  mutate(text_label = str_c("followers: ", followers, '\nlocation: ', place_as_appears_on_bio)) %>%
-  plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
-          alpha = 0.5, 
-          color = ~followers, text = ~text_label)
-```
 
 ### Tweet Positivity or Negitivity
 
@@ -148,7 +138,7 @@ us_tweets_long %>%  filter(sentiment == input$sentiment_choice) %>%
 
 ### Tweets per hour
 
-```{r map tweets per hour, eval = F}
+```{r map tweets per hour, eval = T}
 renderPlotly({
 #map interactive tweets per hour in dashboard
 
