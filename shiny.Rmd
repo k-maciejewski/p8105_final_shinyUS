@@ -18,12 +18,29 @@ library(knitr)
 library(ggridges)
 library(ggthemes)
 library(stringr)
+library(forcats)
 library(plotly)
 library(tidytext)
 library(shiny)
+library(maptools)
+library(gpclib)
+library(sp)
+library(stringi)
+library(choroplethr)
+library(choroplethrMaps)
+library(syuzhet)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(tidyverse)
+library(tidytext)
+library(stringr)
+library(readr)
+library(wordcloud)
+library(RColorBrewer)
+library(plotly)
 ```
-
-
 
 ```{r load tweet data, cache = TRUE}
 # The sentiment function takes a really long time so I created a new data file so you don't have to run it
@@ -149,3 +166,57 @@ us_tweets_long %>%
           color = ~sentiment, text = ~hour)
 })
 ```
+
+### Converting Lat & Long to State
+
+```{r heat map}
+state_tweets = us_tweets %>%
+  select("longitude", "latitude")
+
+latlong2state <- function(state_tweets) {
+    states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
+    IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
+    states_sp <- map2SpatialPolygons(states, IDs=IDs,
+                     proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+    states_tweets_SP <- SpatialPoints(state_tweets, 
+                    proj4string=CRS("+proj=longlat +datum=WGS84"))
+    
+    indices <- over(states_tweets_SP, states_sp)
+
+    stateNames <- sapply(states_sp@polygons, function(x) x@ID)
+    stateNames[indices]
+}
+
+state_name = latlong2state(state_tweets)
+
+us_tweets = cbind(state_name, us_tweets)
+```
+
+```{r}
+us_sentiments = us_tweets %>%
+  filter(country == "US") %>%
+  select(c(1, 21:30)) %>%
+  na.omit(state_name) %>%
+  group_by(state_name) %>%
+  summarise_all(funs(sum)) %>%
+  mutate(positive = as.numeric(positive),
+         negative = as.numeric(negative))
+
+```
+
+
+```{r}
+us_sentiments %>%
+  select("state_name", "negative") %>%
+  rename(region = state_name, value = negative) %>%
+  state_choropleth(title = "Negative Sentiment across the U.S.",
+                   legend = "Sentiment Score")  
+
+us_sentiments %>%
+  select("state_name", "positive") %>%
+  rename(region = state_name, value = positive) %>%
+  state_choropleth(title = "Positive Sentiment Across the U.S.",
+                   legend = "Sentiment Score")
+```
+
