@@ -41,14 +41,13 @@ us_tweets <- read_csv("us_tweets.csv")
 ```
 
 
-
 ```{r Converts to long format}
 us_tweets_long <- gather(us_tweets, sentiment, count, anger:trust, 
                          factor_key = TRUE)
 ```
 
 ```{r number of tweets per hour}
-us_tweets_long$hour <- hour(as.POSIXct(us_tweets$hour, format = "%H:%M"))
+us_tweets_long$hour <- hour(us_tweets_long$hour)
 
 ```
 
@@ -83,12 +82,15 @@ checkboxGroupInput("sentiment_choice", label = h3("Select Sentiment"),
 hr()
 
 ## hours
-hours = us_tweets_long %>% distinct(hour) %>% pull()
+hours = us_tweets_long %>% arrange(hour) %>% distinct(hour) %>% pull()
 
-# sliderInput widget
-sliderInput("hour_choice", label = h3("Choose hour"), min=min(hours),
-            max= max(hours),
-            value=c("1","5"))
+selectInput("hour_choice", label = h3("Choose Hour"),
+            choices = hours, selected = "2")
+
+# # sliderInput widget
+# sliderInput("hour_choice", label = h3("Choose hour"), min=min(hours),
+#             max= max(hours),
+#             value=c("1","5"), step = 1)
 
 ```
 
@@ -133,7 +135,7 @@ renderPlotly({
 #map interactive tweets per hour in dashboard
 
 us_tweets_long %>%
-  filter(country == "US") %>%  filter(sentiment == input$sentiment_choice) %>% filter(hour == input$hour_choice) %>% mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
+  filter(country == "US")%>% filter(hour == input$hour_choice) %>%  filter(sentiment == input$sentiment_choice)  %>% mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
   plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
           alpha = 0.5, 
           color = ~sentiment, text = ~text_label)
