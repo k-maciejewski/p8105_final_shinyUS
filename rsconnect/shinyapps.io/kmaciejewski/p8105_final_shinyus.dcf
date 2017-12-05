@@ -5,6 +5,6 @@ account: kmaciejewski
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 244741
-bundleId: 1117393
+bundleId: 1117413
 url: https://kmaciejewski.shinyapps.io/p8105_final_shinyus/
-when: 1512506818.96185
+when: 1512507451.74819
