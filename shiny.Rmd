@@ -3,7 +3,7 @@ title: "U.S. Tweet data"
 output: 
   flexdashboard::flex_dashboard:
     navbar:
-      - { title: "Project Website", href: "https://github.com/k-maciejewski/p8105_final_website", align: left }
+      - { title: "Project Website", href: "https://k-maciejewski.github.io/p8105_final_website/index.html", align: left }
     source_code: "https://github.com/k-maciejewski/p8105_final_shinyUS"
 runtime: shiny
 ---
@@ -20,7 +20,6 @@ library(plotly)
 library(tidytext)
 library(shiny)
 library(maptools)
-library(gpclib)
 library(sp)
 library(stringi)
 library(choroplethr)
@@ -65,7 +64,7 @@ us_tweets_long <- gather(us_tweets, sentiment, count, anger:trust,
 ```
 
 ```{r number of tweets per hour}
-us_tweets$hour <- hour(as.POSIXct(us_tweets$hour, format = " %H:%M"))
+us_tweets_long$hour <- hour(as.POSIXct(us_tweets$hour, format = "%H:%M"))
 
 ```
 
@@ -77,13 +76,8 @@ This page investigates tweet sentiments over the enire U.S. during April 14-15, 
 
 It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and ...
 
-
-```{r, eval = F}
-sentiments = us_tweets_long %>% distinct(sentiment) %>% pull()
-
-checkboxGroupInput("sentiment_choice", label = h3("Select Sentiment"),
-            choices = sentiments, selected = "anger")
-
+```{r widget}
+## pos neg
 hr()
 
 us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive, 
@@ -92,23 +86,25 @@ us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive,
 pos_neg = us_tweets_neg_pos %>% distinct(neg_pos) %>% pull()
 
 radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices = pos_neg, selected = NULL,
-  inline = FALSE, width = NULL, choiceNames = NULL, choiceValues = NULL)
+  inline = T, width = NULL, choiceNames = NULL, choiceValues = NULL)
 
 hr()
 
-# set hour of the day
-# min_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  as.POSIXct(min())
-# 
-# max_hour = us_tweets_long %>% filter(sentiment == input$sentiment_choice) %>% select(hour) %>%  as.POSIXct(max())
+## sentiments
+sentiments = us_tweets_long %>% distinct(sentiment) %>% pull()
 
-hours = us_tweets %>% distinct(hour) %>% pull()
+checkboxGroupInput("sentiment_choice", label = h3("Select Sentiment"),
+            choices = sentiments, selected = "anger", inline = T)
+
+hr()
+
+## hours
+hours = us_tweets_long %>% distinct(hour) %>% pull()
 
 # sliderInput widget
 sliderInput("hour_choice", label = h3("Choose hour"), min=min(hours),
             max= max(hours),
-            value=c("1","2"))
-
-hr()
+            value=c("1","5"))
 
 ```
 
@@ -116,18 +112,6 @@ Row {.tabset .tabset-fade }
 -----------------------------------------------------------------------
 
 ### Tweet Positivity or Negitivity
-
-```{r np_widgets}
-us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive, 
-                         factor_key = TRUE)
-
-pos_neg = us_tweets_neg_pos %>% distinct(neg_pos) %>% pull()
-
-radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices = pos_neg, selected = NULL,
-  inline = FALSE, width = NULL, choiceNames = NULL, choiceValues = NULL)
-
-hr()
-```
 
 ```{r, eval = T}
 renderPlotly({
@@ -143,15 +127,6 @@ us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>%
 
 
 ### Tweet Sentiments
-```{r sent_widget}
-sentiments = us_tweets_long %>% distinct(sentiment) %>% pull()
-
-checkboxGroupInput("sentiment_choice", label = h3("Select Sentiment"),
-            choices = sentiments, selected = "anger")
-
-hr()
-```
-
 ```{r, eval = T}
 #name of sentiment
 renderPlotly({
@@ -169,27 +144,15 @@ us_tweets_long %>%  filter(sentiment == input$sentiment_choice) %>%
 
 ### Tweets per hour
 
-```{r hr_widget}
-hours = us_tweets %>% distinct(hour) %>% pull()
-
-# sliderInput widget
-sliderInput("hour_choice", label = h3("Choose hour"), min=min(hours),
-            max= max(hours),
-            value=c("1","5"))
-
-hr()
-```
-
-
 ```{r map tweets per hour, eval = T}
 renderPlotly({
 #map interactive tweets per hour in dashboard
 
 us_tweets_long %>%
-  filter(country == "US") %>%  filter(sentiment == input$sentiment_choice) %>% filter(hour == input$hour_choice)%>% 
+  filter(country == "US") %>%  filter(sentiment == input$sentiment_choice) %>% filter(hour == input$hour_choice) %>% mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
   plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
           alpha = 0.5, 
-          color = ~sentiment, text = ~hours)
+          color = ~sentiment, text = ~text_label)
 })
 ```
 
