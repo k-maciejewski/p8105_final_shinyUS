@@ -21,16 +21,15 @@ library(tidytext)
 library(shiny)
 library(maptools)
 library(sp)
+library(maps)
 library(stringi)
 library(choroplethr)
 library(choroplethrMaps)
 library(syuzhet)
 library(dplyr)
 library(scales)
-library(tidyverse)
 library(tidytext)
 library(RColorBrewer)
-library(plotly)
 library(lubridate)
 ```
 
@@ -48,7 +47,41 @@ us_tweets_long <- gather(us_tweets, sentiment, count, anger:trust,
 
 ```{r number of tweets per hour}
 us_tweets_long$hour <- hour(us_tweets_long$hour)
+```
 
+```{r convert lat&long to state name}
+state_tweets = us_tweets %>%
+  select("longitude", "latitude")
+
+latlong2state <- function(state_tweets) {
+    states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
+    IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
+    states_sp <- map2SpatialPolygons(states, IDs=IDs,
+                     proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+    states_tweets_SP <- SpatialPoints(state_tweets, 
+                    proj4string=CRS("+proj=longlat +datum=WGS84"))
+    
+    indices <- over(states_tweets_SP, states_sp)
+
+    stateNames <- sapply(states_sp@polygons, function(x) x@ID)
+    stateNames[indices]
+}
+
+state_name = latlong2state(state_tweets)
+
+us_tweets = cbind(state_name, us_tweets)
+```
+
+```{r sum across sentiment}
+us_sentiments = us_tweets %>%
+  filter(country == "US") %>%
+  select(c(1, 8:17)) %>%
+  na.omit(state_name) %>%
+  group_by(state_name) %>%
+  summarise_all(funs(sum)) %>%
+  mutate(positive = as.numeric(positive),
+         negative = as.numeric(negative))
 ```
 
 Column {.sidebar}
@@ -57,7 +90,7 @@ This `flexdashboard` with Shiny was made for the final project of [Jeff Goldsmit
 
 This page investigates tweet sentiments over the enire U.S. during April 14-15, 2016. The data analyzed is from [here]( http://followthehashtag.com/datasets/free-twitter-dataset-usa-200000-free-usa-tweets/).
 
-It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and ...
+It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and [Kathryn Addabbo](https://github.com/kaddabbo)
 
 ```{r widget}
 ## pos neg
@@ -142,56 +175,14 @@ us_tweets_long %>%
 })
 ```
 
-### State Heat Maps
+### Heat Map
 
-```{r heat map, eval = FALSE}
-state_tweets = us_tweets %>%
-  select("longitude", "latitude")
-
-latlong2state <- function(state_tweets) {
-    states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
-    IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
-    states_sp <- map2SpatialPolygons(states, IDs=IDs,
-                     proj4string=CRS("+proj=longlat +datum=WGS84"))
-
-    states_tweets_SP <- SpatialPoints(state_tweets, 
-                    proj4string=CRS("+proj=longlat +datum=WGS84"))
-    
-    indices <- over(states_tweets_SP, states_sp)
-
-    stateNames <- sapply(states_sp@polygons, function(x) x@ID)
-    stateNames[indices]
-}
-
-state_name = latlong2state(state_tweets)
-
-us_tweets = cbind(state_name, us_tweets)
-```
-
-```{r, eval= FALSE}
-us_sentiments = us_tweets %>%
-  filter(country == "US") %>%
-  select(c(1, 21:30)) %>%
-  na.omit(state_name) %>%
-  group_by(state_name) %>%
-  summarise_all(funs(sum)) %>%
-  mutate(positive = as.numeric(positive),
-         negative = as.numeric(negative))
-
-```
-
-
-```{r, eval = FALSE}
-us_sentiments %>%
-  select("state_name", "negative") %>%
-  rename(region = state_name, value = negative) %>%
-  state_choropleth(title = "Negative Sentiment across the U.S.",
-                   legend = "Sentiment Score")  
-
-us_sentiments %>%
-  select("state_name", "positive") %>%
-  rename(region = state_name, value = positive) %>%
-  state_choropleth(title = "Positive Sentiment Across the U.S.",
-                   legend = "Sentiment Score")
+```{r, map overall sentiment scores per state, eval = T}
+renderPlotly({
+#map interactive sentiment score across the country   
+  
+  
+  
+})
 ```
 
