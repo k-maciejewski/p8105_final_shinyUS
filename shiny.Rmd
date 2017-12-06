@@ -72,11 +72,11 @@ us_tweets = cbind(state_name, us_tweets)
 
 ```{r sum across sentiment}
 us_sentiments = us_tweets %>%
-  select(c(1, 8:17)) %>%
+  select(c(1, 7:16)) %>%
   na.omit(state_name) %>%
   group_by(state_name) %>%
   summarise_all(funs(sum)) %>%
-  gather(key = sentiment, value = score, anger:positive) %>%
+  gather(key = sentiment, value = score, positive:trust) %>%
   mutate(score = as.numeric(score)) %>%
   spread(sentiment, score)
 
