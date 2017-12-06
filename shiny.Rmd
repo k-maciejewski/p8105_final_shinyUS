@@ -79,7 +79,8 @@ us_sentiments = us_tweets %>%
   group_by(state_name) %>%
   summarise_all(funs(sum)) %>%
   gather(key = sentiment, value = score, anger:positive) %>%
-  mutate(score = as.numeric(score))
+  mutate(score = as.numeric(score)) %>%
+  spread(sentiment, score)
 
 us_sentiments$abr = state.abb[match(us_sentiments$state_name,state.name)]
 
@@ -180,11 +181,16 @@ us_tweets_long %>%
 ### Heat Map
 
 ```{r, map overall sentiment scores per state, eval = F}
-renderPlotly({
-#map interactive sentiment score across the country   
-  
-  
-  
-})
+g <- list(scope = 'usa')
+
+us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", anger, "Anticipation", anticipation, "<br>",
+                           "Disgust", disgust, "Fear", fear,
+                           "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
+
+plot_geo(us_sentiments) %>%
+    add_trace(
+      z = ~positive, text = ~hover, locations = ~abr,
+      color = ~positive, colors = 'Purples') %>%
+  layout(geo = g)
 ```
 
