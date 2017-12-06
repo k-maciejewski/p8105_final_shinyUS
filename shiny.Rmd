@@ -148,7 +148,7 @@ plot_geo(us_sentiments) %>%
     add_trace(
       z = ~positive, text = ~hover, locations = ~abr,
       color = ~positive, colors = 'Reds') %>%
-  layout(title = 'Positive Sentiment Sums across the U.S.'
+  layout(title = 'Positive Sentiment Sums across the U.S.',
          geo = g)
 
 plot_geo(us_sentiments, locationmode = 'USA-states') %>%
