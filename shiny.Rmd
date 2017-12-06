@@ -33,8 +33,7 @@ library(lubridate)
 
 ```{r load tweet data, cache = TRUE}
 # The sentiment function takes a really long time so I created a new data file so you don't have to run it
-us_tweets <- read_csv("us_tweets.csv") 
-
+us_tweets <- read_csv("us_tweets_new.csv") 
 ```
 
 
@@ -73,7 +72,6 @@ us_tweets = cbind(state_name, us_tweets)
 
 ```{r sum across sentiment}
 us_sentiments = us_tweets %>%
-  filter(country == "US") %>%
   select(c(1, 8:17)) %>%
   na.omit(state_name) %>%
   group_by(state_name) %>%
@@ -167,8 +165,7 @@ radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices
 
 renderPlotly({
 #positive score
-us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>%
-  filter(country == "US") %>% 
+us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>% 
   mutate(text_label = str_c("sentiment: ", neg_pos, '\nlocation: ', place_as_appears_on_bio)) %>% 
   plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
           alpha = 0.5, 
@@ -183,7 +180,6 @@ us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>%
 renderPlotly({
 #name of sentiment, ggplot
 us_tweets_long %>%  filter(sentiment == input$sentiment_choice) %>% 
-  filter(country == "US") %>% 
   filter(count > 0) %>% 
   mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
   plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
@@ -200,7 +196,7 @@ renderPlotly({
 #map interactive tweets per hour in dashboard
 
 us_tweets_long %>%
-  filter(country == "US")%>% filter(hour == input$hour_choice) %>%  filter(sentiment == input$sentiment_choice)  %>% mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
+  filter(hour == input$hour_choice) %>%  filter(sentiment == input$sentiment_choice)  %>% mutate(text_label = str_c("sentiment: ", sentiment, '\nlocation: ', place_as_appears_on_bio)) %>% 
   plot_ly(x = ~longitude, y = ~latitude, type = "scatter", mode = "markers",
           alpha = 0.5, 
           color = ~sentiment, text = ~text_label)
