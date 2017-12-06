@@ -128,7 +128,7 @@ us_sentiments = gather(us_sentiments, neg_pos, count, negative:positive,
 
 state_pos_neg = us_sentiments %>% distinct(neg_pos) %>% pull()
 
-radioButtons("state_pos_neg", label= h3("Select Positive or Negative Sentiment Totals"), choices = state_pos_neg, selected = NULL,
+radioButtons("state_pos_neg", label= h3("Select Positive or Negative Total"), choices = state_pos_neg, selected = NULL,
   inline = T, width = NULL, choiceNames = NULL, choiceValues = NULL)
 
 renderPlotly({
@@ -140,9 +140,9 @@ us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", an
                            "Disgust", disgust, "Fear", fear,
                            "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
 
-plot_geo(us_sentiments) %>%
+plot_geo(us_sentiments, locationmode = "USA-states") %>%
   filter(neg_pos == input$state_pos_neg) %>%
-  add_trace(z = ~count, text = ~hover, locations = ~abr, color = ~count, colors = 'Purples') %>%
+  add_trace(z = ~count, text = ~hover, locations = ~abr, color = ~count, colors = 'Reds') %>%
   layout(title = 'Sentiment Sums across the U.S.',
          geo = g)
   
