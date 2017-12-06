@@ -47,7 +47,7 @@ us_tweets_long <- gather(us_tweets, sentiment, count, anger:trust,
 us_tweets_long$hour <- hour(us_tweets_long$hour)
 ```
 
-```{r convert lat&long to state name}
+```{r convert latlong to state name}
 state_tweets = us_tweets %>%
   select("longitude", "latitude")
 
@@ -96,17 +96,6 @@ This page investigates tweet sentiments over the enire U.S. during April 14-15, 
 It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and [Kathryn Addabbo](https://github.com/kaddabbo)
 
 ```{r widget}
-## pos neg
-hr()
-
-us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive, 
-                         factor_key = TRUE)
-
-pos_neg = us_tweets_neg_pos %>% distinct(neg_pos) %>% pull()
-
-radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices = pos_neg, selected = NULL,
-  inline = T, width = NULL, choiceNames = NULL, choiceValues = NULL)
-
 hr()
 
 ## sentiments
@@ -136,7 +125,7 @@ Row {.tabset .tabset-fade }
 
 ```{r, map overall sentiment sums per state, eval = T}
 #map interactive sentiment sums across the country  
-
+renderPlotly({
 g <- list(scope = 'usa',
           projection = list(type = 'albers usa'))
 
@@ -157,11 +146,23 @@ plot_geo(us_sentiments, locationmode = 'USA-states') %>%
       color = ~negative, colors = 'Purples') %>%
   layout(title = 'Negative Sentiment Totals across the U.S.',
          geo = g)
+})
 ```
 
 ### Tweet Positivity or Negitivity
 
 ```{r, eval = T}
+## pos neg buttons
+hr()
+
+us_tweets_neg_pos <- gather(us_tweets, neg_pos, count, negative:positive, 
+                         factor_key = TRUE)
+
+pos_neg = us_tweets_neg_pos %>% distinct(neg_pos) %>% pull()
+
+radioButtons("pos_neg", label= h3("Select Positive or Negative Tweets"), choices = pos_neg, selected = NULL,
+  inline = T, width = NULL, choiceNames = NULL, choiceValues = NULL)
+
 renderPlotly({
 #positive score
 us_tweets_neg_pos %>% filter(neg_pos == input$pos_neg) %>%
