@@ -132,6 +132,25 @@ selectInput("hour_choice", label = h3("Choose Hour"),
 
 Row {.tabset .tabset-fade } 
 -----------------------------------------------------------------------
+### Heat Map
+
+```{r, map overall sentiment sums per state, eval = F}
+#map interactive sentiment sums across the country  
+
+g <- list(scope = 'usa',
+          projection = list(type = 'albers usa'))
+
+us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", anger, "Anticipation", anticipation, "<br>",
+                           "Disgust", disgust, "Fear", fear,
+                           "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
+
+plot_geo(us_sentiments) %>%
+    add_trace(
+      z = ~positive, text = ~hover, locations = ~abr,
+      color = ~positive, colors = 'Reds') %>%
+  layout(title = 'Positive Sentiment Sums across the U.S.'
+         geo = g)
+```
 
 ### Tweet Positivity or Negitivity
 
@@ -176,21 +195,5 @@ us_tweets_long %>%
           alpha = 0.5, 
           color = ~sentiment, text = ~text_label)
 })
-```
-
-### Heat Map
-
-```{r, map overall sentiment scores per state, eval = F}
-g <- list(scope = 'usa')
-
-us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", anger, "Anticipation", anticipation, "<br>",
-                           "Disgust", disgust, "Fear", fear,
-                           "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
-
-plot_geo(us_sentiments) %>%
-    add_trace(
-      z = ~positive, text = ~hover, locations = ~abr,
-      color = ~positive, colors = 'Purples') %>%
-  layout(geo = g)
 ```
 
