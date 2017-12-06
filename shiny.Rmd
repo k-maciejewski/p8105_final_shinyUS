@@ -33,7 +33,7 @@ library(lubridate)
 
 ```{r load tweet data, cache = TRUE}
 # The sentiment function takes a really long time so I created a new data file so you don't have to run it
-us_tweets <- read_csv("us_tweets_new.csv") 
+us_tweets <- read_csv("us_tweets_new.csv")
 ```
 
 
@@ -67,11 +67,11 @@ latlong2state <- function(state_tweets) {
 
 state_name = stri_trans_totitle(latlong2state(state_tweets))
 
-us_tweets = cbind(state_name, us_tweets)
+us_sentiments = cbind(state_name, us_tweets)
 ```
 
 ```{r sum across sentiment}
-us_sentiments = us_tweets %>%
+us_sentiments = us_sentiments%>%
   select(c(1, 7:16)) %>%
   na.omit(state_name) %>%
   group_by(state_name) %>%
