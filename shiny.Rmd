@@ -134,7 +134,7 @@ Row {.tabset .tabset-fade }
 -----------------------------------------------------------------------
 ### Heat Map
 
-```{r, map overall sentiment sums per state, eval = F}
+```{r, map overall sentiment sums per state, eval = T}
 #map interactive sentiment sums across the country  
 
 g <- list(scope = 'usa',
