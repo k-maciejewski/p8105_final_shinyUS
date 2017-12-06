@@ -13,7 +13,6 @@ library(flexdashboard)
 library(tidyverse)
 library(janitor)
 library(haven)
-library(dplyr)
 library(knitr)
 library(ggthemes)
 library(plotly)
@@ -26,12 +25,11 @@ library(stringi)
 library(choroplethr)
 library(choroplethrMaps)
 library(syuzhet)
-library(dplyr)
 library(scales)
-library(tidytext)
 library(RColorBrewer)
 library(lubridate)
 ```
+
 
 ```{r load tweet data, cache = TRUE}
 # The sentiment function takes a really long time so I created a new data file so you don't have to run it
@@ -80,8 +78,8 @@ us_sentiments = us_tweets %>%
   na.omit(state_name) %>%
   group_by(state_name) %>%
   summarise_all(funs(sum)) %>%
-  mutate(positive = as.numeric(positive),
-         negative = as.numeric(negative))
+  gather(key = sentiment, value = score, anger:positive) %>%
+  mutate(score = as.numeric(score))
 ```
 
 Column {.sidebar}
@@ -177,7 +175,7 @@ us_tweets_long %>%
 
 ### Heat Map
 
-```{r, map overall sentiment scores per state, eval = T}
+```{r, map overall sentiment scores per state, eval = F}
 renderPlotly({
 #map interactive sentiment score across the country   
   
