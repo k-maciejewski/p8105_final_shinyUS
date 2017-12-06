@@ -66,7 +66,7 @@ latlong2state <- function(state_tweets) {
     stateNames[indices]
 }
 
-state_name = latlong2state(state_tweets)
+state_name = stri_trans_totitle(latlong2state(state_tweets))
 
 us_tweets = cbind(state_name, us_tweets)
 ```
@@ -80,6 +80,10 @@ us_sentiments = us_tweets %>%
   summarise_all(funs(sum)) %>%
   gather(key = sentiment, value = score, anger:positive) %>%
   mutate(score = as.numeric(score))
+
+us_sentiments$abr = state.abb[match(us_sentiments$state_name,state.name)]
+
+us_sentiments$abr[is.na(us_sentiments$abr)] = "DC"
 ```
 
 Column {.sidebar}
