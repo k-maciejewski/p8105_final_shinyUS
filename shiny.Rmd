@@ -33,7 +33,7 @@ library(lubridate)
 
 ```{r load tweet data, cache = TRUE}
 # The sentiment function takes a really long time so I created a new data file so you don't have to run it
-us_tweets <- read_csv("us_tweets_new.csv")
+us_tweets <- read_csv("tweet_subset.csv")
 ```
 
 
@@ -72,7 +72,7 @@ us_sentiments = cbind(state_name, us_tweets)
 
 ```{r sum across sentiment}
 us_sentiments = us_sentiments%>%
-  select(c(1, 7:16)) %>%
+  select(state_name, anger:positive) %>%
   na.omit(state_name) %>%
   group_by(state_name) %>%
   summarise_all(funs(sum)) %>%
@@ -89,7 +89,7 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 This `flexdashboard` with Shiny was made for the final project of [Jeff Goldsmith's Data Science I class](http://jeffgoldsmith.com/DSI/final_project.html) in the Department of Biostatistics at Columbia University. 
 
-This page investigates tweet sentiments over the enire U.S. during April 14-15, 2016. The data analyzed is from [here]( http://followthehashtag.com/datasets/free-twitter-dataset-usa-200000-free-usa-tweets/).
+This page investigates tweet sentiments over the entire U.S. during April 14-16, 2016. The data analyzed is from [here]( http://followthehashtag.com/datasets/free-twitter-dataset-usa-200000-free-usa-tweets/).
 
 It was created by [Kaitlin Maciejewski](https://github.com/k-maciejewski) and [Kathryn Addabbo](https://github.com/kaddabbo)
 
