@@ -125,26 +125,28 @@ Row {.tabset .tabset-fade }
 
 ```{r, map overall sentiment sums per state, eval = T}
 #map interactive sentiment sums across the country  
-renderPlotly({
-g <- list(scope = 'usa',
-          projection = list(type = 'albers usa'))
+us_sentiments = gather(us_sentiments, neg_pos, count, negative:positive, 
+                         factor_key = TRUE)
+
+state_pos_neg = us_sentiments %>% distinct(neg_pos) %>% pull()
+
+radioButtons("state_sent", label= h3("Select Positive or Negative Sentiment Totals"), choices = state_pos_neg, selected = NULL,
+  inline = T, width = NULL, choiceNames = NULL, choiceValues = NULL)
 
 us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", anger, "Anticipation", anticipation, "<br>",
                            "Disgust", disgust, "Fear", fear,
                            "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
 
-plot_geo(us_sentiments) %>%
-    add_trace(
-      z = ~positive, text = ~hover, locations = ~abr,
-      color = ~positive, colors = 'Reds') %>%
-  layout(title = 'Positive Sentiment Sums across the U.S.',
-         geo = g)
+renderPlotly({
+g <- list(scope = 'usa',
+          projection = list(type = 'albers usa'))
 
-plot_geo(us_sentiments, locationmode = 'USA-states') %>%
+plot_geo(us_sentiments) %>%
+  filter(neg_pos == input$state_sent) %>%
     add_trace(
-      z = ~negative, text = ~hover, locations = ~abr,
-      color = ~negative, colors = 'Purples') %>%
-  layout(title = 'Negative Sentiment Totals across the U.S.',
+      z = ~neg_pos, text = ~hover, locations = ~abr,
+      color = ~count, colors = 'Reds') %>%
+  layout(title = 'Sentiment Sums across the U.S.',
          geo = g)
 })
 ```
