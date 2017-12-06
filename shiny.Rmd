@@ -140,9 +140,9 @@ us_sentiments$hover <- with(us_sentiments, paste(state_name, '<br>', "Anger", an
                            "Disgust", disgust, "Fear", fear,
                            "<br>", "Joy", joy, "Sadness", sadness, '<br>', "Surprise", surprise, "Trust", trust))
 
-plot_geo(us_sentiments)%>%
+plot_geo(us_sentiments) %>%
   filter(neg_pos == input$state_pos_neg) %>%
-    add_trace(z = ~count, text = ~hover, locations = ~abr) %>%
+  add_trace(z = ~count, text = ~hover, locations = ~abr, color = ~count, colors = 'Purples') %>%
   layout(title = 'Sentiment Sums across the U.S.',
          geo = g)
   
